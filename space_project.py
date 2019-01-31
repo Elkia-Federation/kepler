@@ -17,7 +17,7 @@ import matplotlib.animation as animation
 fig = plt.figure()
 ax = p3.Axes3D(fig)
 
-
+import datetime as datetime
 
 
 
@@ -148,21 +148,22 @@ eframe = earth.createFrames()
 cframe = ceres.createFrames()
 escatter = ax.scatter(eframe[0][0], eframe[0][1],  eframe[0][2],c='b',marker = 'o')
 cscatter = ax.scatter(cframe[0][0], cframe[0][1], cframe[0][2],c='b',marker = 'o')
+plotter = ax.plot([eframe[0][0], cframe[0][0]], [eframe[0][1],cframe[0[1]]],  [eframe[0][2],cframe[0][2]],'bo', animated=True)
 sun = ax.scatter(0, 0, 0,c='r',marker = 'o')
 #escatter1 = ax.scatter(eframe[0][0], eframe[0][1],  eframe[0][2],c='b',marker = 'o')
 #cscatter1 = ax.scatter(cframe[0][0], cframe[0][1], cframe[0][2],c='b',marker = 'o')
 print(len(eframe))
 print(len(cframe))
 #print(eframe)
-def update(frame, escatter, cscatter):
+def update(frame,plotter):
   #escatter.set_offsets(eframe[frame])
   #cscatter.set_offsets(cframe[frame])
   #print(frame)
-    
-  escatter = ax.scatter(eframe[frame][0], eframe[frame][1],  eframe[frame][2],c='b',marker = 'o')
-  cscatter = ax.scatter(cframe[frame][0], cframe[frame][1], cframe[frame][2],c='b',marker = 'o')
+  plotter.set_data([[eframe[frame][0], cframe[frame][0]], [eframe[frame][1],cframe[frame[1]]]])
+  #escatter = ax.scatter(eframe[frame][0], eframe[frame][1],  eframe[frame][2],c='b',marker = 'o')
+  #cscatter = ax.scatter(cframe[frame][0], cframe[frame][1], cframe[frame][2],c='b',marker = 'o')
   return  escatter, cscatter
-line_ani = animation.FuncAnimation(fig, update, len(eframe), fargs=(escatter, cscatter),
+line_ani = animation.FuncAnimation(fig, update, len(eframe), fargs=(plotter),
                                    interval=5, blit=False)
 
 
