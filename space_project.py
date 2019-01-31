@@ -63,6 +63,8 @@ def focuspath(e,a,q,i,period, timediff, offset):
   
   
   return xcoord, ycoord, zcoord
+def angle_helper(t,e):
+  return t-(t-e*np.sin(t)-t)/(1-e*np.cos(t))-(t-(t-e*np.sin(t)-t)/(1-e*np.cos(t))-e*np.sin(t-(t-e*np.sin(t)-t)/(1-e*np.cos(t)))-t)/(1-e*np.cos(t-(t-e*np.sin(x)-t)/(1-e*np.cos(x))))-(t-(t-e*np.sin(t)-t)/(1-e*np.cos(t))-(t-(t-e*np.sin(t)-t)/(1-e*np.cos(t))-e*np.sin(t-(t-e*np.sin(t)-t)/(1-e*np.cos(t)))-t)/(1-e*np.cos(t-(t-e*np.sin(t)-t)/(1-e*np.cos(e))))-e*np.sin(t-(t-e*np.sin(t)-t)/(1-e*np.cos(t))-(t-(t-e*np.sin(t)-t)/(1-e*np.cos(t))-e*np.sin(t-(t-e*np.sin(t)-t)/(1-e*np.cos(t)))-t)/(1-e*np.cos(t-(t-e*np.sin(t)-t)/(1-e*np.cos(t)))))-t)/(1-e*np.cos(t-(t-e*np.sin(t)-t)/(1-e*np.cos(t))-(t-(t-e*np.sin(t)-t)/(1-e*np.cos(t))-e*np.sin(t-(t-e*np.sin(t)-t)/(1-e*np.cos(t)))-t)/(1-e*np.cos(t-(t-e*np.sin(t)-t)/(1-e*np.cos(t))))))
 def path(e,a,q,i,period, timediff, offset):
   
   """calculate the path of the comet based on inputs
@@ -78,13 +80,16 @@ def path(e,a,q,i,period, timediff, offset):
   """
   b = a*np.sqrt(1-e**2)
   c=np.sqrt(a**2-b**2)
-  t = ((timediff*np.pi*b)/period)
-  t = (((timediff*np.pi*b)/period) + e*np.sin(t))%(2*np.pi)
+  #t = ((timediff*np.pi*b)/period)
+  #t1 = ((timediff)*np.pi*b)/period
+  #print(t1-t)
+  #t1 = (((timediff*np.pi*b)/period) + e*np.sin(t))%(2*np.pi)
   #print(t)
+  t1= angle_helper(((timediff % period)/period)*2*np.pi,e)
   theta=0 #need a real theta value 
-  xcoord = a*np.cos(t+offset)*np.cos(theta)-b*np.sin(t+offset)*np.sin(theta)-c*np.cos(theta) #c term is to adjust for the focus
-  ycoord = a*np.cos(t+offset)*np.sin(theta)*np.cos(i)+b*np.sin(t+offset)*np.cos(theta)*np.cos(i)-c*np.sin(theta)*np.cos(i)
-  zcoord = a*np.cos(t+offset)*np.sin(theta)*np.sin(i)+b*np.sin(t+offset)*np.cos(theta)*np.sin(i)-c*np.sin(theta)*np.sin(i)
+  xcoord = a*np.cos(t1+offset)*np.cos(theta)-b*np.sin(t1+offset)*np.sin(theta)-c*np.cos(theta) #c term is to adjust for the focus
+  ycoord = a*np.cos(t1+offset)*np.sin(theta)*np.cos(i)+b*np.sin(t1+offset)*np.cos(theta)*np.cos(i)-c*np.sin(theta)*np.cos(i)
+  zcoord = a*np.cos(t1+offset)*np.sin(theta)*np.sin(i)+b*np.sin(t1+offset)*np.cos(theta)*np.sin(i)-c*np.sin(theta)*np.sin(i)
   
   
   return xcoord, ycoord, zcoord
@@ -129,8 +134,8 @@ for t in range(0,100):
     earth.zcoords.append(z)
 data = earth.getPath()
 orbit2 = [ax.plot(data[0], data[1], data[2])[0]]
-for t in range(100000):
-    x, y, z = path(0.016, 1,0,0,365.24,t, 1.1519173063)
+for time in range(100000):
+    x, y, z = path(0.016, 1,0,0,365.24,time, 1.1519173063)
     earth.datax.append(x)
     earth.datay.append(y)
     earth.dataz.append(z)
@@ -143,18 +148,19 @@ eframe = earth.createFrames()
 cframe = ceres.createFrames()
 escatter = ax.scatter(eframe[0][0], eframe[0][1],  eframe[0][2],c='b',marker = 'o')
 cscatter = ax.scatter(cframe[0][0], cframe[0][1], cframe[0][2],c='b',marker = 'o')
+sun = ax.scatter(0, 0, 0,c='r',marker = 'o')
 #escatter1 = ax.scatter(eframe[0][0], eframe[0][1],  eframe[0][2],c='b',marker = 'o')
 #cscatter1 = ax.scatter(cframe[0][0], cframe[0][1], cframe[0][2],c='b',marker = 'o')
 print(len(eframe))
 print(len(cframe))
 #print(eframe)
 def update(frame, escatter, cscatter):
-  escatter.set_offsets(eframe[frame])
-  cscatter.set_offsets(cframe[frame])
-  print(eframe[frame])
+  #escatter.set_offsets(eframe[frame])
+  #cscatter.set_offsets(cframe[frame])
+  #print(frame)
     
-  #escatter = ax.scatter(eframe[frame][0], eframe[frame][1],  eframe[frame][2],c='b',marker = 'o')
-  #cscatter = ax.scatter(cframe[frame][0], cframe[frame][1], cframe[frame][2],c='b',marker = 'o')
+  escatter = ax.scatter(eframe[frame][0], eframe[frame][1],  eframe[frame][2],c='b',marker = 'o')
+  cscatter = ax.scatter(cframe[frame][0], cframe[frame][1], cframe[frame][2],c='b',marker = 'o')
   return  escatter, cscatter
 line_ani = animation.FuncAnimation(fig, update, len(eframe), fargs=(escatter, cscatter),
                                    interval=5, blit=False)
