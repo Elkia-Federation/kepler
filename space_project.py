@@ -42,15 +42,15 @@ ax.set_title('3D Test')
 
 #plt.show()
 
-def focuspath(e,a,q,i,period, timediff, initialPos):
+def focuspath(e,a,q,i,period, timediff, offset):
   """calculate the path of the comet based on inputs
   
   INPUTS: e = 
           a = semi major axis length
           i = inclination (cameron's phi)
           period = 
-          timediff =  //this assumes t=0 is 30-Apr-2018 6:05
-          initialPos = 3D vector describing planet's position at t=0
+          timediff =  this parameter/period is the percentage along the orbit//this assumes t=0 is 30-Apr-2018 6:05
+          initialPos = should be the percentage along orbit * period
   OUTPUTS: a 3-D point
   
   """
@@ -63,7 +63,8 @@ def focuspath(e,a,q,i,period, timediff, initialPos):
   
   
   return xcoord, ycoord, zcoord
-def path(e,a,q,i,period, timediff, initialPos):
+def path(e,a,q,i,period, timediff, offset):
+  
   """calculate the path of the comet based on inputs
   
   INPUTS: e = eccentricity
@@ -77,22 +78,16 @@ def path(e,a,q,i,period, timediff, initialPos):
   """
   b = a*np.sqrt(1-e**2)
   c=np.sqrt(a**2-b**2)
+  t = ((timediff*np.pi*b)/period)
+  t = (((timediff*np.pi*b)/period) + e*np.sin(t))%(2*np.pi)
+  #print(t)
   theta=0 #need a real theta value 
-  xcoord = a*np.cos(timediff)*np.cos(theta)-b*np.sin(timediff)*np.sin(theta)
-  ycoord = a*np.cos(timediff)*np.sin(theta)*np.cos(i)+b*np.sin(timediff)*np.cos(theta)*np.cos(i)
-  zcoord = a*np.cos(timediff)*np.sin(theta)*np.sin(i)+b*np.sin(timediff)*np.cos(theta)*np.sin(i)
+  xcoord = a*np.cos(t+offset)*np.cos(theta)-b*np.sin(t+offset)*np.sin(theta)-c*np.cos(theta) #c term is to adjust for the focus
+  ycoord = a*np.cos(t+offset)*np.sin(theta)*np.cos(i)+b*np.sin(t+offset)*np.cos(theta)*np.cos(i)-c*np.sin(theta)*np.cos(i)
+  zcoord = a*np.cos(t+offset)*np.sin(theta)*np.sin(i)+b*np.sin(t+offset)*np.cos(theta)*np.sin(i)-c*np.sin(theta)*np.sin(i)
   
   
   return xcoord, ycoord, zcoord
-
-def earthpath():
-  """calculate the path of earth
-  
-  INPUTS: 
-
-  OUTPUTS: 
-
-  """
 
 import numpy as np
 
@@ -105,17 +100,16 @@ class Ceres:
     self.datax= []
     self.datay=[]
     self.dataz=[]
+    self.frames = []
   def getPath(self):
     return [self.xcoords, self.ycoords, self.zcoords]
   def createFrames(self):
-    for index in frames:
-      self.datax.append(self.xcoords[i])
-      self.datay.append(self.ycoords[i])
-      self.dataz.append(self.zcoords[i])
-    return [self.datax, self.datay, self.dataz]
+    for index in range(len(self.datax)):
+      self.frames.append([self.datax[index],self.datay[index],self.dataz[index]])
+    return self.frames
 
 ceres = Ceres()
-for t in range(1000):
+for t in range(100):
     x, y, z = focuspath(0.076, 2.77, 0, 0.18483037, 0, t/10,0)
     ceres.xcoords.append(x)
     ceres.ycoords.append(y)
@@ -128,12 +122,42 @@ orbit1 = [ax.plot(data[0], data[1], data[2])[0]]
 #line_ani = animation.FuncAnimation(fig, update_lines, 25, fargs=(data, lines),
 ##                                   interval=50, blit=True,)
 earth = Ceres()
-for t in range(1000):
+for t in range(0,100):
     x, y, z = focuspath(0.016, 1, 0, 0, 0, t/10,0)
     earth.xcoords.append(x)
     earth.ycoords.append(y)
     earth.zcoords.append(z)
 data = earth.getPath()
 orbit2 = [ax.plot(data[0], data[1], data[2])[0]]
+for t in range(100000):
+    x, y, z = path(0.016, 1,0,0,365.24,t, 1.1519173063)
+    earth.datax.append(x)
+    earth.datay.append(y)
+    earth.dataz.append(z)
+for j in range(100000):
+    x, y, z = path(0.076, 2.77, 0, 0.18483037, 1683.15, j,0)
+    ceres.datax.append(x)
+    ceres.datay.append(y)
+    ceres.dataz.append(z)
+eframe = earth.createFrames()
+cframe = ceres.createFrames()
+escatter = ax.scatter(eframe[0][0], eframe[0][1],  eframe[0][2],c='b',marker = 'o')
+cscatter = ax.scatter(cframe[0][0], cframe[0][1], cframe[0][2],c='b',marker = 'o')
+#escatter1 = ax.scatter(eframe[0][0], eframe[0][1],  eframe[0][2],c='b',marker = 'o')
+#cscatter1 = ax.scatter(cframe[0][0], cframe[0][1], cframe[0][2],c='b',marker = 'o')
+print(len(eframe))
+print(len(cframe))
+#print(eframe)
+def update(frame, escatter, cscatter):
+  escatter.set_offsets(eframe[frame])
+  cscatter.set_offsets(cframe[frame])
+  print(eframe[frame])
+    
+  #escatter = ax.scatter(eframe[frame][0], eframe[frame][1],  eframe[frame][2],c='b',marker = 'o')
+  #cscatter = ax.scatter(cframe[frame][0], cframe[frame][1], cframe[frame][2],c='b',marker = 'o')
+  return  escatter, cscatter
+line_ani = animation.FuncAnimation(fig, update, len(eframe), fargs=(escatter, cscatter),
+                                   interval=5, blit=False)
+
 
 plt.show()
